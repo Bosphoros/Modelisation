@@ -1,0 +1,11 @@
+﻿La génération a démarré 29/09/2015 11:08:42.
+     1>Projet "C:\Users\etu\Desktop\Modelisation_TP1\Modelisation TP1.vcxproj" sur le nœud 2 (ClCompile cible(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt ..\tp_01_eleve\Hello.cpp
+         Hello.cpp
+     1>..\tp_01_eleve\Hello.cpp(42): fatal error C1083: Impossible d'ouvrir le fichier include : 'GL/glut.h' : No such file or directory
+     1>Génération du projet "C:\Users\etu\Desktop\Modelisation_TP1\Modelisation TP1.vcxproj" terminée (ClCompile cible(s)) -- ÉCHEC.
+
+ÉCHEC de la build.
+
+Temps écoulé 00:00:00.10
