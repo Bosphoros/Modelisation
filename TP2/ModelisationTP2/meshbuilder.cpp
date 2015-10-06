@@ -355,22 +355,22 @@ Mesh MeshBuilder::cone(float rayon, float hauteur, float hauteurTronc, int echan
     normales.append(nbase);
 
     for(int i = 0; i < echantillons; ++i) {
-        QVector3D p(rayon*cos(i*2*PI/echantillons), base.y(), sin(i*2*PI/echantillons));
+        QVector3D p(rayon*cos(i*2*PI/echantillons), base.y(), rayon*sin(i*2*PI/echantillons));
         points.append(p);
         QVector3D n = p;
         normales.append(n);
 
         topo.append(i+1);
         topo.append(0);
-        topo.append(i);
+        topo.append(i+1);
+
+        topo.append(1+((i+1)%(echantillons)));
+        topo.append(0);
+        topo.append(1+((i+1)%(echantillons)));
 
         topo.append(0);
         topo.append(0);
         topo.append(0);
-
-        topo.append((i+1)%(echantillons+1));
-        topo.append(0);
-        topo.append((i+1)%(echantillons+1));
     }
 
     if(!coupe){
@@ -382,18 +382,247 @@ Mesh MeshBuilder::cone(float rayon, float hauteur, float hauteurTronc, int echan
         for(int i = 0; i < echantillons; ++i) {
             topo.append(i+1);
             topo.append(0);
-            topo.append(i);
-
-            topo.append((i+1)%(echantillons+1));
-            topo.append(0);
-            topo.append((i+1)%(echantillons+1));
+            topo.append(i+1);
 
             topo.append(echantillons+1);
             topo.append(0);
             topo.append(echantillons+1);
+
+            topo.append(1+(i+1)%(echantillons));
+            topo.append(0);
+            topo.append(1+(i+1)%(echantillons));
 
         }
     }
+    else {
+        QVector3D top(0,hauteurTronc/2, 0);
+        QVector3D ntop(0, 1, 0);
+
+        float petitRayon = rayon*(hauteur-hauteurTronc)/hauteur;
+
+        for(int i = 0; i < echantillons; ++i) {
+            QVector3D p(petitRayon*cos(i*2*PI/echantillons), top.y(), petitRayon*sin(i*2*PI/echantillons));
+            points.append(p);
+            QVector3D n = p;
+            normales.append(n);
+
+            topo.append(i+echantillons+1);
+            topo.append(0);
+            topo.append(i+echantillons+1);
+
+            topo.append(2*echantillons+1);
+            topo.append(0);
+            topo.append(2*echantillons+1);
+
+            topo.append(1+(i+1)%(echantillons)+echantillons);
+            topo.append(0);
+            topo.append(1+(i+1)%(echantillons)+echantillons);
+
+
+
+            topo.append(i+1);
+            topo.append(0);
+            topo.append(i+1);
+
+            topo.append(i+1+echantillons);
+            topo.append(0);
+            topo.append(i+1+echantillons);
+
+            topo.append(1+((i+1)%(echantillons)));
+            topo.append(0);
+            topo.append(1+((i+1)%(echantillons)));
+
+
+
+            topo.append(1+((i+1)%(echantillons)));
+            topo.append(0);
+            topo.append(1+((i+1)%(echantillons)));
+
+            topo.append(i+1+echantillons);
+            topo.append(0);
+            topo.append(i+1+echantillons);
+
+            topo.append(1+(i+1)%(echantillons)+echantillons);
+            topo.append(0);
+            topo.append(1+(i+1)%(echantillons)+echantillons);
+
+
+        }
+        points.append(top);
+        normales.append(ntop);
+    }
+
+    Mesh m(points, topo, normales);
+    return m;
+}
+
+Mesh MeshBuilder::sphereTranche(float rayon, int paralleles, int meridiens, int retrait)
+{
+    QList<QVector3D> points;
+    QList<int> topo;
+    QList<QVector3D> normales;
+
+    QVector3D bot(0, -rayon, 0);
+    QVector3D top(0, rayon, 0);
+    int nbrayon = paralleles - retrait;
+    for(int j = 0; j < meridiens; ++j) { //i*(PI*2)/paralleles
+    // -PI -> PI
+    // 2+meridiens
+    // j/meridiens*(2*PI)-PI j 1 -> meridiens-1
+        for(int i = 0; i < nbrayon; ++i) {
+            QVector3D p(rayon*(cos(i*(2*PI)/paralleles))*cos((j+1)*PI/(meridiens+1)-PI/2), rayon*sin((j+1)*PI/(meridiens+1)-PI/2),rayon*(sin(i*2*PI/paralleles))*cos((j+1)*PI/(meridiens+1)-PI/2));
+            points.append(p);
+            QVector3D n = p;
+            normales.append(n);
+
+            if(j < meridiens - 1){
+                if(i < nbrayon - 1) {
+                    topo.append(j*nbrayon+(i+1)%nbrayon);
+                    topo.append(0);
+                    topo.append(j*nbrayon+(i+1)%nbrayon);
+
+                    topo.append(j*nbrayon+i);
+                    topo.append(0);
+                    topo.append(j*nbrayon+i);
+
+                    topo.append((j+1)*nbrayon+i);
+                    topo.append(0);
+                    topo.append((j+1)*nbrayon+i);
+
+
+                    topo.append((j+1)*nbrayon+(i+1)%nbrayon);
+                    topo.append(0);
+                    topo.append((j+1)*nbrayon+(i+1)%nbrayon);
+
+                    topo.append(j*nbrayon+(i+1)%nbrayon);
+                    topo.append(0);
+                    topo.append(j*nbrayon+(i+1)%nbrayon);
+
+                    topo.append((j+1)*nbrayon+i);
+                    topo.append(0);
+                    topo.append((j+1)*nbrayon+i);
+                }
+                else
+                {
+                    topo.append(j*nbrayon+(i+1)%nbrayon);
+                    topo.append(0);
+                    topo.append(j*nbrayon+(i+1)%nbrayon);
+
+                    topo.append(nbrayon*meridiens+2);
+                    topo.append(0);
+                    topo.append(nbrayon*meridiens+2);
+
+                    topo.append((j+1)*nbrayon+(i+1)%nbrayon);
+                    topo.append(0);
+                    topo.append((j+1)*nbrayon+(i+1)%nbrayon);
+
+
+                    topo.append(nbrayon*meridiens+2);
+                    topo.append(0);
+                    topo.append(nbrayon*meridiens+2);
+
+                    topo.append(j*nbrayon+i);
+                    topo.append(0);
+                    topo.append(j*nbrayon+i);
+
+                    topo.append((j+1)*nbrayon+i);
+                    topo.append(0);
+                    topo.append((j+1)*nbrayon+i);
+                }
+            }
+        }
+    }
+    points.append(bot);
+    points.append(top);
+    QVector3D nbot(0,0,-1);
+    QVector3D ntop(0,0,1);
+    normales.append(nbot);
+    normales.append(ntop);
+
+    for(int i = 0; i < nbrayon - 1; ++i) {
+
+        topo.append(nbrayon*meridiens);
+        topo.append(0);
+        topo.append(nbrayon*meridiens);
+
+        topo.append(i);
+        topo.append(0);
+        topo.append(i);
+
+        topo.append((i+1)%nbrayon);
+        topo.append(0);
+        topo.append((i+1)%nbrayon);
+
+        topo.append(nbrayon*(meridiens-1)+i);
+        topo.append(0);
+        topo.append(nbrayon*(meridiens-1)+i);
+
+        topo.append(nbrayon*meridiens+1);
+        topo.append(0);
+        topo.append(nbrayon*meridiens+1);
+
+        topo.append(nbrayon*(meridiens-1)+(i+1)%nbrayon);
+        topo.append(0);
+        topo.append(nbrayon*(meridiens-1)+(i+1)%nbrayon);
+    }
+
+    // Centre base
+
+    topo.append(nbrayon*meridiens+2);
+    topo.append(0);
+    topo.append(nbrayon*meridiens+2);
+
+    topo.append(0);
+    topo.append(0);
+    topo.append(0);
+
+    topo.append(nbrayon*meridiens);
+    topo.append(0);
+    topo.append(nbrayon*meridiens);
+
+    topo.append(nbrayon*meridiens+2);
+    topo.append(0);
+    topo.append(nbrayon*meridiens+2);
+
+    topo.append(nbrayon*meridiens);
+    topo.append(0);
+    topo.append(nbrayon*meridiens);
+
+    topo.append(nbrayon-1);
+    topo.append(0);
+    topo.append(nbrayon-1);
+
+    // Centre top
+
+    topo.append(nbrayon*meridiens+2);
+    topo.append(0);
+    topo.append(nbrayon*meridiens+2);
+
+    topo.append(nbrayon*meridiens-1);
+    topo.append(0);
+    topo.append(nbrayon*meridiens-1);
+
+    topo.append(nbrayon*meridiens+1);
+    topo.append(0);
+    topo.append(nbrayon*meridiens+1);
+
+
+
+    topo.append(nbrayon*meridiens+2);
+    topo.append(0);
+    topo.append(nbrayon*meridiens+2);
+
+    topo.append(nbrayon*meridiens+1);
+    topo.append(0);
+    topo.append(nbrayon*meridiens+1);
+
+    topo.append(nbrayon*(meridiens-1));
+    topo.append(0);
+    topo.append(nbrayon*(meridiens-1));
+
+    QVector3D centre(0,0,0);
+    points.append(centre);
+    normales.append(ntop);
 
     Mesh m(points, topo, normales);
     return m;
