@@ -4,7 +4,7 @@
 int main(int argc, char *argv[])
 {
     MeshBuilder mb;
-    Mesh m = mb.sphereTranche(2, 20, 10, 3);
+    Mesh m = mb.sphere(2, 20, 10);
     QString n("C:\\Users\\etu\\Desktop\\cone.obj");
     mb.saveMesh(n,m);
 
