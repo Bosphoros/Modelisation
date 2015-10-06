@@ -2,7 +2,6 @@
 #include <QFile>
 #include <QTextStream>
 #include <iostream>
-#include "smoothnoise.h"
 #include <cmath>
 #ifndef fmin
 #define fmin(a,b) a<b?a:b
@@ -171,7 +170,9 @@ Mesh MeshBuilder::cylindre(float rayon, float hauteur, int meridiens){
     float demihauteur = hauteur/2;
     QVector3D base(0, 0, -demihauteur);
     QVector3D top(0, 0, demihauteur);
-
+    QList<QVector3D> points;
+    QList<int> topo;
+    QList<QVector3D> normales;
 
     for(int i = 0; i < meridiens; ++i) {
         QVector3D pointbase(rayon*cos(i*2*PI/meridiens), rayon*sin(i*2*PI/meridiens), -demihauteur);
@@ -263,43 +264,41 @@ Mesh MeshBuilder::sphere(float rayon, int paralleles, int meridiens)
 
     QVector3D bot(0, -rayon, 0);
     QVector3D top(0, rayon, 0);
-    for(int j = 1; j < meridiens - 1; ++j) { //i*(PI*2)/paralleles
+    for(int j = 0; j < meridiens; ++j) { //i*(PI*2)/paralleles
     // -PI -> PI
     // 2+meridiens
     // j/meridiens*(2*PI)-PI j 1 -> meridiens-1
         for(int i = 0; i < paralleles; ++i) {
-            QVector3D p(rayon*(cos(i*(2*PI)/paralleles)-sin(j*(2*PI)/meridiens-PI)), rayon*sin(j*2*PI/meridiens),rayon*(sin(i*2*PI/paralleles)-sin(j*2*PI)/meridiens-PI));
+            QVector3D p(rayon*(cos(i*(2*PI)/paralleles))*cos((j+1)*PI/(meridiens+1)-PI/2), rayon*sin((j+1)*PI/(meridiens+1)-PI/2),rayon*(sin(i*2*PI/paralleles))*cos((j+1)*PI/(meridiens+1)-PI/2));
             points.append(p);
             QVector3D n = p;
             normales.append(n);
 
-            if(j+1 < meridiens - 1){
-                topo.append((j-1)*meridiens+i);
+            if(j < meridiens - 1){
+                topo.append(j*paralleles+(i+1)%paralleles);
                 topo.append(0);
-                topo.append((j-1)*meridiens+i);
+                topo.append(j*paralleles+(i+1)%paralleles);
 
-                topo.append((j-1)*meridiens+(i+1)%paralleles);
+                topo.append(j*paralleles+i);
                 topo.append(0);
-                topo.append((j-1)*meridiens+(i+1)%paralleles);
+                topo.append(j*paralleles+i);
 
-                topo.append(j*meridiens+i);
+                topo.append((j+1)*paralleles+i);
                 topo.append(0);
-                topo.append(j*meridiens+i);
+                topo.append((j+1)*paralleles+i);
 
 
-
-                topo.append((j-1)*meridiens+(i+1)%paralleles);
+                topo.append((j+1)*paralleles+(i+1)%paralleles);
                 topo.append(0);
-                topo.append((j-1)*meridiens+(i+1)%paralleles);
+                topo.append((j+1)*paralleles+(i+1)%paralleles);
 
-                topo.append(j*meridiens+(i+1)%paralleles);
+                topo.append(j*paralleles+(i+1)%paralleles);
                 topo.append(0);
-                topo.append(j*meridiens+(i+1)%paralleles);
+                topo.append(j*paralleles+(i+1)%paralleles);
 
-
-                topo.append(j*meridiens+i);
+                topo.append((j+1)*paralleles+i);
                 topo.append(0);
-                topo.append(j*meridiens+i);
+                topo.append((j+1)*paralleles+i);
             }
         }
     }
@@ -311,29 +310,89 @@ Mesh MeshBuilder::sphere(float rayon, int paralleles, int meridiens)
     normales.append(ntop);
 
     for(int i = 0; i < paralleles; ++i) {
+
+
+        topo.append(paralleles*meridiens);
+        topo.append(0);
+        topo.append(paralleles*meridiens);
+
         topo.append(i);
         topo.append(0);
         topo.append(i);
-
-        topo.append(paralleles*meridiens+1);
-        topo.append(paralleles*meridiens+1);
-        topo.append(paralleles*meridiens+1);
 
         topo.append((i+1)%paralleles);
         topo.append(0);
         topo.append((i+1)%paralleles);
 
-        topo.append((paralleles-1)*meridiens+i);
+        topo.append(paralleles*(meridiens-1)+i);
         topo.append(0);
-        topo.append((paralleles-1)*meridiens+i);
+        topo.append(paralleles*(meridiens-1)+i);
 
-        topo.append(paralleles*meridiens+2);
-        topo.append(paralleles*meridiens+2);
-        topo.append(paralleles*meridiens+2);
-
-        topo.append((paralleles-1)*meridiens+(i+1)%paralleles);
+        topo.append(paralleles*meridiens+1);
         topo.append(0);
-        topo.append((paralleles-1)*meridiens+(i+1)%paralleles);
+        topo.append(paralleles*meridiens+1);
+
+        topo.append(paralleles*(meridiens-1)+(i+1)%paralleles);
+        topo.append(0);
+        topo.append(paralleles*(meridiens-1)+(i+1)%paralleles);
+    }
+
+    Mesh m(points, topo, normales);
+    return m;
+}
+
+Mesh MeshBuilder::cone(float rayon, float hauteur, float hauteurTronc, int echantillons)
+{
+    QVector3D base(0,-hauteurTronc/2, 0);
+    bool coupe = hauteur > hauteurTronc;
+
+    QList<QVector3D> points;
+    QList<int> topo;
+    QList<QVector3D> normales;
+
+    points.append(base);
+    QVector3D nbase(0, -1, 0);
+    normales.append(nbase);
+
+    for(int i = 0; i < echantillons; ++i) {
+        QVector3D p(rayon*cos(i*2*PI/echantillons), base.y(), sin(i*2*PI/echantillons));
+        points.append(p);
+        QVector3D n = p;
+        normales.append(n);
+
+        topo.append(i+1);
+        topo.append(0);
+        topo.append(i);
+
+        topo.append(0);
+        topo.append(0);
+        topo.append(0);
+
+        topo.append((i+1)%(echantillons+1));
+        topo.append(0);
+        topo.append((i+1)%(echantillons+1));
+    }
+
+    if(!coupe){
+        QVector3D top(0,hauteur/2, 0);
+        points.append(top);
+        QVector3D ntop(0, 1, 0);
+        normales.append(ntop);
+
+        for(int i = 0; i < echantillons; ++i) {
+            topo.append(i+1);
+            topo.append(0);
+            topo.append(i);
+
+            topo.append((i+1)%(echantillons+1));
+            topo.append(0);
+            topo.append((i+1)%(echantillons+1));
+
+            topo.append(echantillons+1);
+            topo.append(0);
+            topo.append(echantillons+1);
+
+        }
     }
 
     Mesh m(points, topo, normales);
