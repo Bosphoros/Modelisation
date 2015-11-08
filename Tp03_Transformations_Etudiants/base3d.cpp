@@ -18,6 +18,7 @@
 
 void init_scene();
 void render_scene();
+void render_scene_mesh();
 GLvoid initGL();
 GLvoid window_display();
 GLvoid window_reshape(GLsizei width, GLsizei height); 
@@ -42,10 +43,11 @@ GLfloat Light1Specular[]= { 0.3f, 0.3f, 0.3f, 1.0f };
 int main(int argc, char **argv) 
 {  
 	OffReader or;
-	m = or.import("C:\\Users\\etu\\Desktop\\buddha.off");
+	m = or.import("C:\\Users\\Florian\\Dropbox\\bunny.off");
 	m.normalize();
 	m.center();
 	m.norms();
+	m.stats();
 
 
   // initialisation  des paramètres de GLUT en fonction
@@ -76,7 +78,8 @@ int main(int argc, char **argv)
 
   // la boucle prinicipale de gestion des événements utilisateur
   glutMainLoop();  
-
+  //m.randomDisparition();
+  //or.export(m, "D:/bunny.off");
   return 1;
 }
 
@@ -121,7 +124,7 @@ GLvoid window_display()
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  render_scene();
+  render_scene_mesh();
 
   // trace la scène grapnique qui vient juste d'être définie
   glFlush();
@@ -171,16 +174,15 @@ void render_scene()
   
 //c'est ici qu'on dessine
 	//glLoadIdentity();
-	/*glBegin(GL_LINES);
+	glBegin(GL_LINES);
 		glColor3d(1,0,0);
 		glVertex3d(0,0,0);
 		glVertex3d(0,1,0);
 		glColor3d(1,1,1);
 	glEnd();//*/
-	m.draw();
-	glRotated(1,0,1,0);
 
-	/*glPushMatrix();
+
+	glPushMatrix();
 		for(int i = 0; i < 4; ++i) 
 		{
 			glRotated(a*0.25*(1+i),0,1,0);
@@ -208,3 +210,9 @@ void render_scene()
 	glPopMatrix();//*/
 
  }
+
+void render_scene_mesh()
+{
+	m.draw();
+	glRotated(1, 0, 1, 0);
+}

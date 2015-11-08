@@ -8,6 +8,7 @@ public:
 	std::vector<point3> points;
 	std::vector<int> faces;
 	std::vector<point3> normales;
+	int edgesNumb;
 
 	Mesh();
 	Mesh(std::vector<point3> pts, std::vector<int> fcs, std::vector<point3> nrml);
@@ -15,6 +16,8 @@ public:
 	void center();
 	void normalize();
 	void norms();
+	void stats();
+	void randomDisparition();
 	~Mesh();
 };
 

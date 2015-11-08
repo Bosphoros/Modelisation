@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <iterator>
 
 OffReader::OffReader()
 {
@@ -60,6 +61,26 @@ Mesh OffReader::import(std::string file) {
 	Mesh m(points, triangles, normales);
 	return m;
 }
+
+void OffReader::export(const Mesh & m, std::string file)
+{
+	ofstream out;
+	out.open(file);
+	if (out.is_open()) {
+		out << "OFF" << std::endl;
+		out << m.points.size() << " " << (m.faces.size() / 3) << " " << m.edgesNumb << std::endl;
+		for (int i = 0; i < m.points.size(); ++i) {
+			point3 p = m.points[i];
+			out << p.x << " " << p.y << " " << p.z << std::endl;
+		}
+		for (int i = 0; i < m.faces.size(); i += 3) {
+			out << "3 " << m.faces[i] << " " << m.faces[i + 1] << " " << m.faces[i + 2] << std::endl;
+		}
+	}
+	out.close();
+}
+
+
 
 OffReader::~OffReader()
 {
