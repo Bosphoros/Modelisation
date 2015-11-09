@@ -69,6 +69,19 @@ void Mesh::normalize() {
 		p.y /= max;
 		p.z /= max;
 	}
+
+	/*double min = 50;
+	for (int i = 0; i < nb; ++i) {
+		point3 p = points.at(i);
+		if (max <p.x) max = p.x;
+		if (max <p.y) max = p.y;
+		if (max <p.z) max = p.z;
+		if (min >p.x) min = p.x;
+		if (min >p.y) min = p.y;
+		if (min >p.z) min = p.z;
+	}
+
+	std::cout << min << " > " << max << std::endl;*/
 }
 
 void Mesh::norms() {
@@ -168,7 +181,7 @@ void Mesh::stats()
 
 void Mesh::randomDisparition()
 {
-	for (int i = 0; i < 100; ++i) {
+	for (int i = 0; i < 4000; ++i) {
 		faces.erase(faces.begin() + i * 3, faces.begin() + i * 3 + 3);
 	}
 }

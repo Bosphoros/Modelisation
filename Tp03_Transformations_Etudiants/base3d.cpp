@@ -44,10 +44,14 @@ int main(int argc, char **argv)
 {  
 	OffReader or;
 	m = or.import("C:\\Users\\Florian\\Dropbox\\bunny.off");
+	//m = or .import("D:/bunny.off");
 	m.normalize();
 	m.center();
+	
+	m.randomDisparition();
 	m.norms();
 	m.stats();
+	//or.export(m, "D:/bunny.off");
 
 
   // initialisation  des paramètres de GLUT en fonction
@@ -78,8 +82,6 @@ int main(int argc, char **argv)
 
   // la boucle prinicipale de gestion des événements utilisateur
   glutMainLoop();  
-  //m.randomDisparition();
-  //or.export(m, "D:/bunny.off");
   return 1;
 }
 
