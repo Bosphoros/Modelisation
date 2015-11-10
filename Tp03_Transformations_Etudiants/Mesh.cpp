@@ -181,7 +181,7 @@ void Mesh::stats()
 
 void Mesh::randomDisparition()
 {
-	for (int i = 0; i < 4000; ++i) {
+	for (int i = 0; i < 400; ++i) {
 		faces.erase(faces.begin() + i * 3, faces.begin() + i * 3 + 3);
 	}
 }

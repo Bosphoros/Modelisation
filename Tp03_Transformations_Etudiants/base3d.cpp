@@ -1,7 +1,7 @@
 #include <stdio.h>      
 #include <stdlib.h>     
 #include <math.h>
-#include "glut.h" 
+#include <GL/glut.h>
 #include "OffReader.h"
 #include "Mesh.h"
 
@@ -43,7 +43,7 @@ GLfloat Light1Specular[]= { 0.3f, 0.3f, 0.3f, 1.0f };
 int main(int argc, char **argv) 
 {  
 	OffReader or;
-	m = or.import("C:\\Users\\Florian\\Dropbox\\bunny.off");
+	m = or.import("C:\\Users\\etu\\Desktop\\bunny.off");
 	//m = or .import("D:/bunny.off");
 	m.normalize();
 	m.center();
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 	m.randomDisparition();
 	m.norms();
 	m.stats();
-	//or.export(m, "D:/bunny.off");
+	//or.export(m, "D:/bunny.off");*/
 
 
   // initialisation  des paramètres de GLUT en fonction
@@ -126,6 +126,7 @@ GLvoid window_display()
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  //render_scene();
   render_scene_mesh();
 
   // trace la scène grapnique qui vient juste d'être définie
@@ -179,7 +180,7 @@ void render_scene()
 	glBegin(GL_LINES);
 		glColor3d(1,0,0);
 		glVertex3d(0,0,0);
-		glVertex3d(0,1,0);
+		glVertex3d(0,20,0);
 		glColor3d(1,1,1);
 	glEnd();//*/
 

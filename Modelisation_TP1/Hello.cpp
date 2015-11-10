@@ -41,7 +41,7 @@
  */
 #include <iostream>
 #include <cmath>
-#include "glut.h"
+#include <GL/glut.h>
 
 #define C_PI 3.14159265359
 
@@ -130,7 +130,7 @@ void display(void)
  */
   
    /*glBegin(GL_LINE_LOOP);
-   glColor3f (1.0, 1.0, 1.0);
+   glColor3f (0.0, 0.0, 0.0);
       glVertex3f (0.05, 0.75, 0.0);
       glVertex3f (0.05, 0.45, 0.0);
       glVertex3f (0.35, 0.45, 0.0);
@@ -148,7 +148,7 @@ void display(void)
       glVertex3f (0.65, 0.55, 0.0);
       glVertex3f (0.65, 0.45, 0.0);
       glVertex3f (0.75, 0.45, 0.0);
-   glEnd();*/
+   glEnd();//*/
 
    //cercle(0.5,0.5,0.3,30);
 
@@ -157,7 +157,7 @@ void display(void)
 
    floconKoch(0.1,0.2,0 , 0.5, 0.8,0,1);
    floconKoch(0.5,0.8,0, 0.9,0.2,0, 2);
-   floconKoch(0.9,0.2,0, 0.1,0.2,0, 4);
+   floconKoch(0.9,0.2,0, 0.1,0.2,0, 4);//*/
 
 /* Swap the buffers to show the one
  * on which we writed
