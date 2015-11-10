@@ -33,7 +33,7 @@ point3 TabPC[10];
 // Degré de la courbe = Ordre - 1
 int Ordre = 4;
 
-
+int factsBernstein[4];
 
 
 // Point de controle selectionné
@@ -61,7 +61,6 @@ point3 cubiqueHermite(point3 P0, point3 P1, point3 V0, point3 V1, float u) {
 
 void Hermite(point3 P0, point3 P1, point3 V0, point3 V1, int echantillons){
 	glColor3f (0.0, 1.0, 0.0);
-	point3 tmp = cubiqueHermite(P0, P1, V0, V1,0);
 	glBegin(GL_LINE_STRIP);
 	for(float i = 0.0; i <= echantillons ; ++i){
 		point3 p = cubiqueHermite(P0, P1, V0, V1, i/echantillons);
@@ -71,11 +70,35 @@ void Hermite(point3 P0, point3 P1, point3 V0, point3 V1, int echantillons){
 	glColor3f(0.0,0.0,0.0);
 }
 
+void processFactsBernstein() {
+	for(int i = 0; i < Ordre; ++i) {
+		factsBernstein[i] = fact(Ordre-1)/(fact(i)*fact(Ordre-1-i));
+		//std::cout << factsBernstein[i] << std::endl;
+	}
+}
 
 float Bernstein(int i, int n, float t)
 {
- // A developper
- return 0;
+	 return factsBernstein[i]*powf(t,i)*powf((1-t),n-i);
+}
+
+point3 Bezier(float t) {
+	point3 p(0,0,0);
+	for(int i = 0; i < Ordre; ++i) {
+		p = p + TabPC[i]*Bernstein(i, Ordre-1, t);
+	}
+	return p;
+}
+
+void traceBezier(int echantillons) {
+	glColor3f (0.0, 1.0, 0.0);
+	glBegin(GL_LINE_STRIP);
+	for(int i = 0; i <= echantillons; ++i) {
+		point3 tmp = Bezier((float)i/echantillons);
+		glVertex3f(tmp.x, tmp.y, tmp.z);
+	}
+	glEnd();
+	
 }
 
 
@@ -137,11 +160,15 @@ void display(void)
 	glEnd();
 
 	// Dessiner ici la courbe de Bézier.
-	point3 p0(0,0,0);
+	/*point3 p0(0,0,0);
 	point3 p1(2,0,0);
 	point3 v0(8,8,0);
 	point3 v1(8,-8,0);
-	Hermite(p0,p1,v0,v1,20);
+	Hermite(p0,p1,v0,v1,20);//*/
+
+	processFactsBernstein();
+	traceBezier(10);
+
 	// Vous devez avoir implémenté Bernstein précédemment.
 	
 	glEnd(); 
