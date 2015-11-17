@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <GL/glut.h>
 #include "structu.h"
+#include <vector>
 
 /* au cas ou M_PI ne soit defini */
 #ifndef M_PI
@@ -28,7 +29,8 @@ float tx=0.0;
 float ty=0.0;
 
 // Tableau des points de contrôles en global ...
-point3 TabPC[10];
+point3 TabPC[4];
+point3 TabPC2[4];
 // Ordre de la courbre  : Ordre
 // Degré de la courbe = Ordre - 1
 int Ordre = 4;
@@ -101,6 +103,51 @@ void traceBezier(int echantillons) {
 	
 }
 
+point3 Casteljau(float t, std::vector<point3> p) {
+	if (p.size() == 1) {
+		return p[0];
+	}
+	else {
+		std::vector<point3> pts;
+		point3 lien = p[0];
+		for (int i = 1; i < p.size(); ++i) {
+			point3 tmp = (p[i] - lien)*t + lien;
+			pts.push_back(tmp);
+			lien = p[i];
+		}
+		return Casteljau(t, pts);
+	}
+	
+}
+
+void traceCasteljau(int echantillons, point3* p) {
+	glColor3f(0.0, 1.0, 0.0);
+	glBegin(GL_LINE_STRIP);
+	std::vector<point3> pts;
+	for (int i = 0; i < Ordre; ++i) {
+		pts.push_back(p[i]);
+	}
+	
+	for (int i = 0; i <= echantillons; ++i) {
+		point3 tmp = Casteljau((float)i / echantillons, pts);
+		glVertex3f(tmp.x, tmp.y, tmp.z);
+	}
+	glEnd();
+}
+
+void jointure(point3* c1, point3* c2, int pos) {
+	if (pos == -1) {
+		c2[1] = (c1[3] - c1[2]) + c1[3];
+	}
+	else if (pos == 0) {
+		c2[1] = (c1[3] - c1[2]) + c1[3];
+		c2[0] = c1[3];
+	}
+	else {
+		c1[2] = (c2[0] - c2[1]) + c2[0];
+	}
+}
+
 
 /* initialisation d'OpenGL*/
 static void init()
@@ -118,6 +165,11 @@ static void init()
 	TabPC[1] = point3(-1,1,0);
 	TabPC[2] = point3(1,1,0);
 	TabPC[3] = point3(2,-2,0);
+
+	TabPC2[0] = point3(2,-2,0);
+	TabPC2[1] = point3(2.5,-3,0);
+	TabPC2[2] = point3(3.5, -3, 0);
+	TabPC2[3] = point3(5, -2, 0);
 
 }
 
@@ -144,7 +196,13 @@ void display(void)
         {
 		 glVertex3f(TabPC[i].x, TabPC[i].y, TabPC[i].z);
         }
-        glEnd(); //*/
+        glEnd();
+		glColor3f(1.0, 1.0, 0.0);
+	glBegin(GL_LINE_STRIP);
+	for (int i = 0; i < Ordre; ++i) {
+		glVertex3f(TabPC2[i].x, TabPC2[i].y, TabPC2[i].z);
+	}
+	glEnd();//*/
 
 
 	// Affichage du point de controle courant
@@ -167,7 +225,9 @@ void display(void)
 	Hermite(p0,p1,v0,v1,20);//*/
 
 	processFactsBernstein();
-	traceBezier(10);
+	//traceBezier(10);
+	traceCasteljau(10, TabPC);
+	traceCasteljau(10, TabPC2);
 
 	// Vous devez avoir implémenté Bernstein précédemment.
 	
@@ -188,6 +248,7 @@ void reshape(int w, int h)
 
 void keyboard(unsigned char key, int x, int y)
 {
+	int indice = numPoint == Ordre - 1 ? 0 : numPoint == Ordre - 2 ? -1 : 2;
    switch (key) {
    case '+':
 		if (numPoint < Ordre-1)
@@ -209,22 +270,40 @@ void keyboard(unsigned char key, int x, int y)
    case 'd':
          tx=0.1;
 		 ty=0;
+		 
+		 jointure(TabPC, TabPC2, indice);
       break;
    case 'q':
          tx=-0.1;
 		 ty=0;
+		 
+		 jointure(TabPC, TabPC2, indice);
       break;
    case 'z':
          ty=0.1;
 		 tx=0;
+		 jointure(TabPC, TabPC2, indice);
       break;
    case 's':
          ty=-0.1;
 		 tx=0;
+		 jointure(TabPC, TabPC2, indice);
       break;
    case ESC:
       exit(0);
       break;
+   case '0' :
+	   numPoint = 0;
+	   break;
+   case '1':
+	   numPoint = 1;
+	   break;
+   case '2':
+	   numPoint = 2;
+	   break;
+   case '3':
+	   numPoint = 3;
+	   break;
    default :
 	   tx=0;
 	   ty=0;

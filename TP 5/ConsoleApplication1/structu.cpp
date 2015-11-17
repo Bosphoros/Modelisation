@@ -45,6 +45,10 @@ point3
 point3::operator/(const double op)const
 {	return(point3(x/op,y/op,z/op));	}
 
+point3 point3::operator-(const point3 &op) const {
+	return(point3(x-op.x, y-op.y, z-op.z));
+}
+
 
 void
 point3 :: Permutation(point3 *A, point3 *B)
