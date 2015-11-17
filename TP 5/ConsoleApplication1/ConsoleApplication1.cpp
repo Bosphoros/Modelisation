@@ -30,12 +30,17 @@ float ty=0.0;
 
 // Tableau des points de contrôles en global ...
 point3 TabPC[4];
+point3 precedentTabPC[4];
+point3 CasteljauTabPC[20];
 point3 TabPC2[4];
+point3 precedentTabPC2[4];
+point3 CasteljauTabPC2[20];
 // Ordre de la courbre  : Ordre
 // Degré de la courbe = Ordre - 1
 int Ordre = 4;
 
 int factsBernstein[4];
+bool dual = false;
 
 
 // Point de controle selectionné
@@ -75,7 +80,7 @@ void Hermite(point3 P0, point3 P1, point3 V0, point3 V1, int echantillons){
 void processFactsBernstein() {
 	for(int i = 0; i < Ordre; ++i) {
 		factsBernstein[i] = fact(Ordre-1)/(fact(i)*fact(Ordre-1-i));
-		//std::cout << factsBernstein[i] << std::endl;
+		std::cout << factsBernstein[i] << std::endl;
 	}
 }
 
@@ -84,19 +89,19 @@ float Bernstein(int i, int n, float t)
 	 return factsBernstein[i]*powf(t,i)*powf((1-t),n-i);
 }
 
-point3 Bezier(float t) {
+point3 Bezier(float t, point3* pts) {
 	point3 p(0,0,0);
 	for(int i = 0; i < Ordre; ++i) {
-		p = p + TabPC[i]*Bernstein(i, Ordre-1, t);
+		p = p + pts[i]*Bernstein(i, Ordre-1, t);
 	}
 	return p;
 }
 
-void traceBezier(int echantillons) {
+void traceBezier(int echantillons, point3* pts) {
 	glColor3f (0.0, 1.0, 0.0);
 	glBegin(GL_LINE_STRIP);
 	for(int i = 0; i <= echantillons; ++i) {
-		point3 tmp = Bezier((float)i/echantillons);
+		point3 tmp = Bezier((float)i/echantillons, pts);
 		glVertex3f(tmp.x, tmp.y, tmp.z);
 	}
 	glEnd();
@@ -120,31 +125,54 @@ point3 Casteljau(float t, std::vector<point3> p) {
 	
 }
 
-void traceCasteljau(int echantillons, point3* p) {
-	glColor3f(0.0, 1.0, 0.0);
-	glBegin(GL_LINE_STRIP);
+void traceCasteljau(int echantillons, point3* p, point3* pcPrecedents, point3* precedents) {
+	
 	std::vector<point3> pts;
+	bool identique = true;
 	for (int i = 0; i < Ordre; ++i) {
+		if(p[i] != pcPrecedents[i]) {
+			identique = false;
+		}
 		pts.push_back(p[i]);
 	}
-	
+
+	glColor3f(0.0, 1.0, 0.0);
+	glBegin(GL_LINE_STRIP);
 	for (int i = 0; i <= echantillons; ++i) {
-		point3 tmp = Casteljau((float)i / echantillons, pts);
-		glVertex3f(tmp.x, tmp.y, tmp.z);
+		if(!identique) {
+			point3 tmp = Casteljau((float)i / echantillons, pts);
+			precedents[i] = tmp;
+		}
+		glVertex3f(precedents[i].x, precedents[i].y, precedents[i].z);
 	}
 	glEnd();
 }
 
-void jointure(point3* c1, point3* c2, int pos) {
+void jointure(point3* c1, point3* c2) {
+	int pos = numPoint == Ordre -2 ? -1 : numPoint == Ordre -1 ? 0 : numPoint == Ordre ? 10 : numPoint == Ordre + 1 ? 1 : 2;
+	
 	if (pos == -1) {
-		c2[1] = (c1[3] - c1[2]) + c1[3];
-	}
-	else if (pos == 0) {
 		c2[1] = (c1[3] - c1[2]) + c1[3];
 		c2[0] = c1[3];
 	}
-	else {
+	else if (pos == 0) {
+		point3 tmp = (c1[3] - c1[2]);
+		c1[2] = c1[3] - tmp;
+		c2[1] = tmp + c1[3];
+		c2[0] = c1[3];
+	}
+	else if (pos == 10) {
+		point3 tmp = (c2[0] - c1[2]);
+		c1[2] = c2[0] - tmp;
+		c2[1] = tmp + c2[0];
+		c1[3] = c2[0];
+	}
+	else if(pos == 1) {
 		c1[2] = (c2[0] - c2[1]) + c2[0];
+		c2[0] = c1[3];
+	}
+	else {
+		c2[0] = c1[3];
 	}
 }
 
@@ -171,8 +199,77 @@ static void init()
 	TabPC2[2] = point3(3.5, -3, 0);
 	TabPC2[3] = point3(5, -2, 0);
 
+	processFactsBernstein();
+
 }
 
+void update(bool cadres, bool twoCurves) {
+
+	dual = twoCurves;
+	if(twoCurves) {
+		if(numPoint>=Ordre){
+			int indice = numPoint%Ordre;
+			TabPC2[indice]=TabPC2[indice]+point3(tx,ty,0);
+		}
+		else{
+			TabPC[numPoint]=TabPC[numPoint]+point3(tx,ty,0);
+		}
+	}
+	else {
+		TabPC[numPoint]=TabPC[numPoint]+point3(tx,ty,0);
+	}
+	
+	jointure(TabPC, TabPC2);
+
+	// Enveloppe des points de controles
+	if(cadres) {
+		glColor3f (1.0, 0.0, 0.0);
+		glBegin(GL_LINE_STRIP);
+			for (int i =0; i < Ordre; i++)
+			{
+			 glVertex3f(TabPC[i].x, TabPC[i].y, TabPC[i].z);
+			}
+			glEnd();
+		if(dual) {
+			glColor3f(1.0, 1.0, 0.0);
+			glBegin(GL_LINE_STRIP);
+			for (int i = 0; i < Ordre; ++i) {
+				glVertex3f(TabPC2[i].x, TabPC2[i].y, TabPC2[i].z);
+			}
+			glEnd();
+		}}//*/
+
+
+	// Affichage du point de controle courant
+	// On se déplace ensuite avec + et - 
+    // � d'un point de contrôle au suivant (+)
+    // � d'un point de contrôle au précédent (-)
+	if(cadres) {
+		glColor3f (0.0, 0.0, 1.0);
+		glBegin(GL_LINE_LOOP);
+		if(dual){
+			if(numPoint>=Ordre){
+				glVertex3f(TabPC2[numPoint%Ordre].x+0.1, TabPC2[numPoint%Ordre].y+0.1, TabPC2[numPoint%Ordre].z);
+				glVertex3f(TabPC2[numPoint%Ordre].x+0.1, TabPC2[numPoint%Ordre].y-0.1, TabPC2[numPoint%Ordre].z);
+				glVertex3f(TabPC2[numPoint%Ordre].x-0.1, TabPC2[numPoint%Ordre].y-0.1, TabPC2[numPoint%Ordre].z);
+				glVertex3f(TabPC2[numPoint%Ordre].x-0.1, TabPC2[numPoint%Ordre].y+0.1, TabPC2[numPoint%Ordre].z);
+			}
+			else {
+				glVertex3f(TabPC[numPoint].x+0.1, TabPC[numPoint].y+0.1, TabPC[numPoint].z);
+				glVertex3f(TabPC[numPoint].x+0.1, TabPC[numPoint].y-0.1, TabPC[numPoint].z);
+				glVertex3f(TabPC[numPoint].x-0.1, TabPC[numPoint].y-0.1, TabPC[numPoint].z);
+				glVertex3f(TabPC[numPoint].x-0.1, TabPC[numPoint].y+0.1, TabPC[numPoint].z);
+			}
+		}
+		else {
+				glVertex3f(TabPC[numPoint].x+0.1, TabPC[numPoint].y+0.1, TabPC[numPoint].z);
+				glVertex3f(TabPC[numPoint].x+0.1, TabPC[numPoint].y-0.1, TabPC[numPoint].z);
+				glVertex3f(TabPC[numPoint].x-0.1, TabPC[numPoint].y-0.1, TabPC[numPoint].z);
+				glVertex3f(TabPC[numPoint].x-0.1, TabPC[numPoint].y+0.1, TabPC[numPoint].z);
+		}
+		glEnd();
+	}
+}
 
 /* Dessin */
 void display(void)
@@ -187,47 +284,19 @@ void display(void)
 
 	point3 Ptemp;
 	
-	TabPC[numPoint]=TabPC[numPoint]+point3(tx,ty,0);
-
-	// Enveloppe des points de controles
-	glColor3f (1.0, 0.0, 0.0);
-	glBegin(GL_LINE_STRIP);
-        for (int i =0; i < Ordre; i++)
-        {
-		 glVertex3f(TabPC[i].x, TabPC[i].y, TabPC[i].z);
-        }
-        glEnd();
-		glColor3f(1.0, 1.0, 0.0);
-	glBegin(GL_LINE_STRIP);
-	for (int i = 0; i < Ordre; ++i) {
-		glVertex3f(TabPC2[i].x, TabPC2[i].y, TabPC2[i].z);
-	}
-	glEnd();//*/
-
-
-	// Affichage du point de controle courant
-	// On se déplace ensuite avec + et - 
-    // � d'un point de contrôle au suivant (+)
-    // � d'un point de contrôle au précédent (-)
-	glColor3f (0.0, 0.0, 1.0);
-	glBegin(GL_LINE_LOOP);
-		glVertex3f(TabPC[numPoint].x+0.1, TabPC[numPoint].y+0.1, TabPC[numPoint].z);
-		glVertex3f(TabPC[numPoint].x+0.1, TabPC[numPoint].y-0.1, TabPC[numPoint].z);
-		glVertex3f(TabPC[numPoint].x-0.1, TabPC[numPoint].y-0.1, TabPC[numPoint].z);
-		glVertex3f(TabPC[numPoint].x-0.1, TabPC[numPoint].y+0.1, TabPC[numPoint].z);
-	glEnd();
+	update(false, false);
 
 	// Dessiner ici la courbe de Bézier.
 	/*point3 p0(0,0,0);
 	point3 p1(2,0,0);
-	point3 v0(8,8,0);
-	point3 v1(8,-8,0);
+	point3 v0(2,2,0);
+	point3 v1(2,2,0);
 	Hermite(p0,p1,v0,v1,20);//*/
 
-	processFactsBernstein();
-	//traceBezier(10);
-	traceCasteljau(10, TabPC);
-	traceCasteljau(10, TabPC2);
+	traceBezier(10, TabPC);//*/
+
+	/*traceCasteljau(20, TabPC,precedentTabPC, CasteljauTabPC);
+	traceCasteljau(20, TabPC2, precedentTabPC2, CasteljauTabPC2);//*/
 
 	// Vous devez avoir implémenté Bernstein précédemment.
 	
@@ -241,25 +310,36 @@ void reshape(int w, int h)
    glViewport(0, 0, (GLsizei) w, (GLsizei) h);
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
-   glOrtho(-20, 20, -20, 20, -10, 10);
+   glOrtho(-2, 5, -5, 5, -10, 10);
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
 }
 
 void keyboard(unsigned char key, int x, int y)
 {
-	int indice = numPoint == Ordre - 1 ? 0 : numPoint == Ordre - 2 ? -1 : 2;
-   switch (key) {
-   case '+':
-		if (numPoint < Ordre-1)
+	switch (key) {
+	case '+':
+		if(dual) {
+		   if (numPoint < Ordre*2-1)
+		   numPoint = numPoint + 1;
+        else
+            numPoint = 0;
+	   }
+		else if (numPoint < Ordre-1)
 		   numPoint = numPoint + 1;
         else
             numPoint = 0;
 		tx=0;
 		ty=0;
 		break;
-   case '-':
-		if (numPoint > 0) 
+	case '-':
+		if(dual) {
+		   if (numPoint > 0)
+		   numPoint = numPoint - 1;
+        else
+            numPoint = 0;
+	   }
+		else if (numPoint > 0) 
 		   numPoint = numPoint - 1;
         else
             numPoint = Ordre-1;
@@ -267,42 +347,72 @@ void keyboard(unsigned char key, int x, int y)
 		ty=0;
 		break;
 
-   case 'd':
+	case 'd':
          tx=0.1;
 		 ty=0;
-		 
-		 jointure(TabPC, TabPC2, indice);
       break;
-   case 'q':
+	case 'q':
          tx=-0.1;
 		 ty=0;
-		 
-		 jointure(TabPC, TabPC2, indice);
       break;
-   case 'z':
+	case 'z':
          ty=0.1;
 		 tx=0;
-		 jointure(TabPC, TabPC2, indice);
       break;
-   case 's':
+	case 's':
          ty=-0.1;
 		 tx=0;
-		 jointure(TabPC, TabPC2, indice);
       break;
-   case ESC:
+	case ESC:
       exit(0);
       break;
-   case '0' :
+	case '0' :
 	   numPoint = 0;
+		tx=0;
+		ty=0;
 	   break;
-   case '1':
+	case '1':
 	   numPoint = 1;
+	   tx=0;
+		ty=0;
 	   break;
-   case '2':
+	case '2':
 	   numPoint = 2;
+	   tx=0;
+		ty=0;
 	   break;
-   case '3':
+	case '3':
 	   numPoint = 3;
+	   tx=0;
+		ty=0;
+	   break;
+	case '4':
+		if(dual) {
+	   numPoint = 4;
+	   tx=0;
+		ty=0;
+		}
+	   break;
+	case '5':
+		if(dual) {
+	   numPoint = 5;
+	   tx=0;
+		ty=0;
+		}
+	   break;
+	case '6':
+		{
+	   numPoint = 6;
+	   tx=0;
+		ty=0;
+		}
+	   break;
+	case '7':
+		if(dual) {
+	   numPoint = 7;
+	   tx=0;
+		ty=0;
+		}
 	   break;
    default :
 	   tx=0;
@@ -311,9 +421,11 @@ void keyboard(unsigned char key, int x, int y)
    glutPostRedisplay();
 }
 
+
+
 int main(int argc, char **argv)
 {
-   glutInitWindowSize(400, 400);
+   glutInitWindowSize(800, 800);
    glutInit(&argc, argv);
    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
    glutCreateWindow("Courbe de Bézier");

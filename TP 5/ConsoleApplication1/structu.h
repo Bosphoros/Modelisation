@@ -42,6 +42,8 @@ public:
 	point3      operator/(const double op)const;                 //idem
 
 	point3		operator-(const point3 &op) const;
+
+	bool		operator!=(const point3& op) const;
 	
 
 	void		Permutation(point3 *A, point3 *B);	     // Permutation de deux points
