@@ -27,6 +27,7 @@
 
 float tx=0.0;
 float ty=0.0;
+static int a = 0;
 
 // Tableau des points de contrôles en global ...
 point3 TabPC[4];
@@ -35,12 +36,17 @@ point3 CasteljauTabPC[20];
 point3 TabPC2[4];
 point3 precedentTabPC2[4];
 point3 CasteljauTabPC2[20];
+
+point3 TabPCSurf[4][4];
+point3 precedentTabPCSurf[4][4];
+point3 CasteljauTabPC2Surf[20][20];
 // Ordre de la courbre  : Ordre
 // Degré de la courbe = Ordre - 1
 int Ordre = 4;
 
 int factsBernstein[4];
 bool dual = false;
+bool rotation = false;
 
 
 // Point de controle selectionné
@@ -148,6 +154,86 @@ void traceCasteljau(int echantillons, point3* p, point3* pcPrecedents, point3* p
 	glEnd();
 }
 
+void traceCasteljauSurface(int echantillons, int lengthU, int lengthV, point3 p[4][4], point3 pcPrecedents[4][4], point3 precedents[20][20]) {
+
+	std::vector<std::vector<point3>> pts;
+	bool identique = true;
+	for (int i = 0; i < lengthU; ++i) {
+		for (int j = 0; j < lengthV; ++j) {
+			if (p[i][j] != pcPrecedents[i][j]) {
+					identique = false;
+			}
+			if (i == 0) {
+				std::vector<point3> ptsJ;
+				pts.push_back(ptsJ);
+			}
+			pts.at(j).push_back(p[i][j]);
+			if (p[i][j] != pcPrecedents[i][j]) {
+				pcPrecedents[i][j] = p[i][j];
+			}
+		}
+		
+	}
+
+	for (int i = 0; i < echantillons; ++i) {
+		if (!identique) {
+			std::vector<point3> tmpEch1;
+			for (int j = 0; j < lengthU; ++j) {
+				point3 tmp = Casteljau((float)i / echantillons, pts.at(j));
+				tmpEch1.push_back(tmp);
+			}
+			for (int j = 0; j < echantillons; ++j) {
+				point3 tmp = Casteljau((float)j / echantillons, tmpEch1);
+				precedents[i][j] = tmp;
+			}
+		}
+	}
+	glPushMatrix();
+	glRotated(a*0.015625, 1, 0, 0);
+	for (int i = 0; i < echantillons - 1; ++i) {
+		for (int j = 0; j < echantillons - 1; ++j) {
+			glColor3f(0.0, 1.0, 0.0);
+			glBegin(GL_LINE_LOOP);
+			glVertex3f(precedents[i][j].x, precedents[i][j].y, precedents[i][j].z);
+			glVertex3f(precedents[i][j+1].x, precedents[i][j+1].y, precedents[i][j+1].z);
+			glVertex3f(precedents[i+1][j+1].x, precedents[i+1][j+1].y, precedents[i+1][j+1].z);
+			glEnd();
+			glBegin(GL_LINE_LOOP);
+			glVertex3f(precedents[i][j].x, precedents[i][j].y, precedents[i][j].z);
+			glVertex3f(precedents[i+1][j].x, precedents[i+1][j].y, precedents[i+1][j].z);
+			glVertex3f(precedents[i + 1][j+1].x, precedents[i + 1][j + 1].y, precedents[i + 1][j + 1].z);
+			glEnd();
+		}
+	}
+	glPopMatrix();
+}
+
+void traceBezierSurface(int echantillons, point3* pts1, point3* pts2) {
+	std::vector<point3> points1;
+	std::vector<point3> points2;
+
+	for (int i = 0; i < echantillons; ++i) {
+		point3 tmp1 = Bezier((float)i / echantillons, pts1);
+		point3 tmp2 = Bezier((float)i / echantillons, pts2);
+		points1.push_back(tmp1);
+		points2.push_back(tmp2);
+	}
+
+	for (int i = 0; i < echantillons - 1; ++i) {
+		glBegin(GL_LINE_LOOP);
+		glVertex3f(points1.at(i).x, points1.at(i).y, points1.at(i).z);
+		glVertex3f(points2.at(i).x, points2.at(i).y, points2.at(i).z);
+		glVertex3f(points2.at(i+1).x, points2.at(i+1).y, points2.at(i+1).z);
+		glEnd();
+		
+		glBegin(GL_LINE_LOOP);
+		glVertex3f(points1.at(i).x, points1.at(i).y, points1.at(i).z);
+		glVertex3f(points2.at(i+1).x, points2.at(i+1).y, points2.at(i+1).z);
+		glVertex3f(points1.at(i + 1).x, points1.at(i + 1).y, points1.at(i + 1).z);
+		glEnd();
+	}
+}
+
 void jointure(point3* c1, point3* c2) {
 	int pos = numPoint == Ordre -2 ? -1 : numPoint == Ordre -1 ? 0 : numPoint == Ordre ? 10 : numPoint == Ordre + 1 ? 1 : 2;
 	
@@ -189,16 +275,37 @@ static void init()
      TabPC[i] = point3(i,i,i);
     }//*/
  
-	TabPC[0] = point3(-2,-2,0);
-	TabPC[1] = point3(-1,1,0);
-	TabPC[2] = point3(1,1,0);
+	TabPC[0] = point3(-3,-2,0);
+	TabPC[1] = point3(-2,1,0);
+	TabPC[2] = point3(0,-2,0);
 	TabPC[3] = point3(2,-2,0);
 
-	TabPC2[0] = point3(2,-2,0);
-	TabPC2[1] = point3(2.5,-3,0);
-	TabPC2[2] = point3(3.5, -3, 0);
-	TabPC2[3] = point3(5, -2, 0);
+	TabPC2[0] = point3(-3,0,0);
+	TabPC2[1] = point3(-2,2,0);
+	TabPC2[2] = point3(0, 1, 0);
+	TabPC2[3] = point3(1, 2, 0);
 
+	TabPCSurf[0][0] = point3(-3, -2, 0);
+	TabPCSurf[0][1] = point3(-4, 0, 2);
+	TabPCSurf[0][2] = point3(-3, 2, 1);
+	TabPCSurf[0][3] = point3(-2, 3, 0);
+			
+	TabPCSurf[1][0] = point3(-1, 0, 2);
+	TabPCSurf[1][1] = point3(0, 1, 0);
+	TabPCSurf[1][2] = point3(-1, 2, 4);
+	TabPCSurf[1][3] = point3(0, 3, 0);
+
+	TabPCSurf[2][0] = point3(2, -1, -1);
+	TabPCSurf[2][1] = point3(3, 1, 0);
+	TabPCSurf[2][2] = point3(1, 2, 1);
+	TabPCSurf[2][3] = point3(2, 5, 2);
+
+	TabPCSurf[3][0] = point3(3, -2, 0);
+	TabPCSurf[3][1] = point3(4, 0, 1);
+	TabPCSurf[3][2] = point3(4, 2, 2);
+	TabPCSurf[3][3] = point3(4, 4, -2);
+
+	
 	processFactsBernstein();
 
 }
@@ -219,7 +326,8 @@ void update(bool cadres, bool twoCurves) {
 		TabPC[numPoint]=TabPC[numPoint]+point3(tx,ty,0);
 	}
 	
-	jointure(TabPC, TabPC2);
+	//jointure(TabPC, TabPC2);
+
 
 	// Enveloppe des points de controles
 	if(cadres) {
@@ -275,13 +383,11 @@ void update(bool cadres, bool twoCurves) {
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	
    
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	//glTranslatef(tx,ty,0.0);
-  	
-
+	
 	point3 Ptemp;
 	
 	update(false, false);
@@ -293,10 +399,13 @@ void display(void)
 	point3 v1(2,2,0);
 	Hermite(p0,p1,v0,v1,20);//*/
 
-	traceBezier(10, TabPC);//*/
+	/*traceBezier(10, TabPC);//*/
+
+	//traceBezierSurface(100, TabPC, TabPC2);//*/
 
 	/*traceCasteljau(20, TabPC,precedentTabPC, CasteljauTabPC);
 	traceCasteljau(20, TabPC2, precedentTabPC2, CasteljauTabPC2);//*/
+	traceCasteljauSurface(20, 4, 4, TabPCSurf, precedentTabPCSurf, CasteljauTabPC2Surf);
 
 	// Vous devez avoir implémenté Bernstein précédemment.
 	
@@ -310,14 +419,16 @@ void reshape(int w, int h)
    glViewport(0, 0, (GLsizei) w, (GLsizei) h);
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
-   glOrtho(-2, 5, -5, 5, -10, 10);
+   glOrtho(-4, 4, -5, 5, -10, 10);
    glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
+   //glLoadIdentity();
 }
 
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
+	case ' ': rotation = !rotation;
+		break;
 	case '+':
 		if(dual) {
 		   if (numPoint < Ordre*2-1)
@@ -421,7 +532,11 @@ void keyboard(unsigned char key, int x, int y)
    glutPostRedisplay();
 }
 
-
+GLvoid window_idle()
+{
+	if(rotation) a = (a + 1) % (360 * 64);
+	glutPostRedisplay();
+}
 
 int main(int argc, char **argv)
 {
@@ -433,6 +548,7 @@ int main(int argc, char **argv)
    glutReshapeFunc(reshape);
    glutKeyboardFunc(keyboard);
    glutDisplayFunc(display);
+   glutIdleFunc(window_idle);
    glutMainLoop();
    return 0;
 }

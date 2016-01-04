@@ -43,6 +43,20 @@ void Mesh::homotecie(QVector3D &c, float h)
         }
 }
 
+void Mesh::changeUp() {
+    for(int i = 0; i < geom.size(); ++i) {
+        float tmp = geom.at(i).y();
+        geom[i].setY(geom[i].z());
+        geom[i].setZ(tmp);
+    }
+
+    for(int i = 0; i < norm.size(); ++i) {
+        float tmp = norm.at(i).y();
+        norm[i].setY(norm[i].z());
+        norm[i].setZ(tmp);
+    }
+}
+
 void Mesh::merge(const Mesh &mesh)
 {
     QList<int> posv;

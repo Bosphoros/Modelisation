@@ -17,6 +17,7 @@ public:
     void translate(QVector3D& t);
     void rotate(const QMatrix3x3& mat);
     void homotecie(QVector3D &c, float h);
+    void changeUp();
     void merge(const Mesh& mesh);
     int containsGeom(const QVector3D& g);
     int containsNorm(const QVector3D &n);
