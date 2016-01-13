@@ -37,6 +37,8 @@ point3 TabPC2[4];
 point3 precedentTabPC2[4];
 point3 CasteljauTabPC2[20];
 
+point3 TabPC3[4];
+
 point3 TabPCSurf[4][4];
 point3 precedentTabPCSurf[4][4];
 point3 CasteljauTabPC2Surf[20][20];
@@ -234,6 +236,45 @@ void traceBezierSurface(int echantillons, point3* pts1, point3* pts2) {
 	}
 }
 
+void followSurface(int echantillons, point3* pts1, point3* pts2) {
+	std::vector<point3> points1;
+	std::vector<point3> points2;
+
+	for(int i = 0; i < echantillons; ++i) {
+		point3 tmp1 = Bezier((float)i/echantillons, pts1);
+		point3 tmp2 = Bezier((float)i/echantillons, pts2);
+		points1.push_back(tmp1);
+		points2.push_back(tmp2);
+	}
+
+
+	glPushMatrix();
+	glRotated(a*0.015625, 1, 0, 0);
+	for(int i = 0; i < echantillons - 1; ++i) {
+		for(int j = 0; j < echantillons - 1; ++j) {
+			point3 p1, p2, p3, p4;
+			p1 = points1.at(j) + points2.at(i);
+			p2 = points1.at(j) + points2.at(i + 1);
+			p3 = points1.at(j+1) + points2.at(i + 1);
+			p4 = points1.at(j+1) + points2.at(i);
+
+			glBegin(GL_LINE_LOOP);
+				glVertex3f(p1.x, p1.y, p1.z);
+				glVertex3f(p2.x, p2.y, p2.z);
+				glVertex3f(p3.x, p3.y, p3.z);
+			glEnd();
+
+			glBegin(GL_LINE_LOOP);
+				glVertex3f(p1.x, p1.y, p1.z);
+				glVertex3f(p3.x, p3.y, p3.z);
+				glVertex3f(p4.x, p4.y, p4.z);
+			glEnd();
+		}
+	}
+	glPopMatrix();
+}
+
+
 void jointure(point3* c1, point3* c2) {
 	int pos = numPoint == Ordre -2 ? -1 : numPoint == Ordre -1 ? 0 : numPoint == Ordre ? 10 : numPoint == Ordre + 1 ? 1 : 2;
 	
@@ -284,6 +325,11 @@ static void init()
 	TabPC2[1] = point3(-2,2,0);
 	TabPC2[2] = point3(0, 1, 0);
 	TabPC2[3] = point3(1, 2, 0);
+
+	TabPC3[0] = point3(0,-3,0);
+	TabPC3[1] = point3(0,-2,2);
+	TabPC3[2] = point3(0, 0, 1);
+	TabPC3[3] = point3(0, 1, 2);
 
 	TabPCSurf[0][0] = point3(-3, -2, 0);
 	TabPCSurf[0][1] = point3(-4, 0, 2);
@@ -405,7 +451,10 @@ void display(void)
 
 	/*traceCasteljau(20, TabPC,precedentTabPC, CasteljauTabPC);
 	traceCasteljau(20, TabPC2, precedentTabPC2, CasteljauTabPC2);//*/
-	traceCasteljauSurface(20, 4, 4, TabPCSurf, precedentTabPCSurf, CasteljauTabPC2Surf);
+	//traceCasteljauSurface(20, 4, 4, TabPCSurf, precedentTabPCSurf, CasteljauTabPC2Surf);
+
+	followSurface(10, TabPC, TabPC3);
+	//traceBezierSurface(10, TabPC, TabPC2);
 
 	// Vous devez avoir implémenté Bernstein précédemment.
 	
