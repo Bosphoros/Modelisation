@@ -76,8 +76,15 @@ Mesh Grid::getSimplifiedMesh()
 	for (std::map<int, point3>::iterator it = correspondances.begin(); it != correspondances.end(); ++it) {
 		pointsMesh.push_back(it->second);
 	}
-	for (int i = 0; i < mesh.faces.size(); ++i) {
-		faces.push_back(corrMin[mesh.faces.at(i)]);
+	for (int i = 0; i < mesh.faces.size(); i += 3) {
+		int i1 = corrMin[mesh.faces.at(i)];
+		int i2 = corrMin[mesh.faces.at(i+1)];
+		int i3 = corrMin[mesh.faces.at(i+2)];
+		if (i1 != i2 && i1 != i3 && i2 != i3) {
+			faces.push_back(corrMin[mesh.faces.at(i)]);
+			faces.push_back(corrMin[mesh.faces.at(i+1)]);
+			faces.push_back(corrMin[mesh.faces.at(i+2)]);
+		}
 	}
 	std::vector<point3> normales;
 	
